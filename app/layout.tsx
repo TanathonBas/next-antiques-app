@@ -22,9 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${mitr.variable} antialiased`}
+        className={`${mitr.variable} antialiased bg-stone-200`}
       >
-        {children}
+        <div>{children}</div>
       </body>
     </html>
   );

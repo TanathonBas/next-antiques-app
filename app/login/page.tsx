@@ -2,11 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface FormData {
     email: string;
     password: string;
 }
+
+const ArrowLeftIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <line x1="19" y1="12" x2="5" y2="12"></line>
+    <polyline points="12 19 5 12 12 5"></polyline>
+  </svg>
+);
 
 export default function Page() {
     const [formData, setFormData] = useState<FormData>({
@@ -26,6 +45,13 @@ export default function Page() {
 
     return (
         <div className={`flex min-h-screen items-center justify-center p-6 sm:p-24 transition-colors duration-1000`}>
+            <Link
+            href="/allproduct"
+            className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 p-2 rounded-full text-gray-700 hover:bg-gray-100 transition-colors"
+            aria-label="กลับหน้าแรก"
+            >
+            <ArrowLeftIcon className="w-6 h-6" />
+            </Link>
             <div className="flex flex-col items-center w-full max-w-md p-8 bg-white bg-opacity-80 rounded-3xl shadow-2xl">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-extrabold text-amber-900 tracking-tight mb-2">
