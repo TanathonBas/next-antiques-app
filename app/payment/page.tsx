@@ -1,33 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { Store, ChevronDown, } from 'lucide-react';
+import { Store } from 'lucide-react';
 
-function ProductMenu() {
-    // สร้าง state เพื่อจัดการการเปิด/ปิด ของ dropdown
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <div className="relative">
-            {/* ปุ่มสำหรับเปิด/ปิด dropdown */}
-            <button
-                onClick={() => setIsOpen(!isOpen)} // เมื่อคลิก ให้สลับค่า isOpen
-                className="flex items-center space-x-1 hover:text-yellow-300 transition-colors"
-            >
-                <span>สินค้า</span>
-                <ChevronDown size={16} />
-            </button>
-
-            {/* กล่อง dropdown ที่จะแสดงเมื่อ isOpen เป็น true */}
-            {isOpen && (
-                <div className="absolute left-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg z-20">
-                    <a href="#" className="block px-4 py-2 text-sm hover:bg-gray-100 rounded-t-md">ชื่อ</a>
-                    <a href="#" className="block px-4 py-2 text-sm hover:bg-gray-100">ราคา</a>
-                    <a href="#" className="block px-4 py-2 text-sm hover:bg-gray-100 rounded-b-md">เวลาของตัวสินค้า</a>
-                </div>
-            )}
-        </div>
-    );
-}
 
 // -- COMPONENT 2: Header (Navbar) --
 // ส่วนหัวของเว็ป (Navbar)
@@ -45,12 +19,6 @@ function Header() {
 
                     {/* เมนู */}
                     <ul className="hidden md:flex items-center space-x-6">
-                        <li>
-                            <ProductMenu /> {/* เรียกใช้ Component Dropdown */}
-                        </li>
-                        <li>
-                            <a href="/newsapp" className="hover:text-yellow-300 transition-colors">ข่าวสาร</a>
-                        </li>
                         <li>
                             <a href="/aboutus" className="hover:text-yellow-300 transition-colors">เกี่ยวกับเรา</a>
                         </li>
