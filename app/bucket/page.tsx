@@ -160,12 +160,6 @@ const CartItemsList = ({ cartItems, handleRemoveItem }: CartItemsListProps) => (
         ) : (
             cartItems.map(item => (
                 <div key={item.id} className="bg-white rounded-lg shadow-md p-4 flex items-center space-x-4">
-                    <img 
-                        src={item.imageUrl} 
-                        alt={`[รูปภาพ ${item.name}]`} 
-                        className="w-20 h-20 rounded-md object-cover flex-shrink-0"
-                        onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x80/f0f0f0/999?text=Error'; }}
-                    />
                     <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
                         <p className="text-sm text-gray-600 truncate">{item.description}</p>

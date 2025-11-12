@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-// import { useRouter } from 'next/navigation'; // 1. ลบ import นี้ออก
-// 1. Import ไอคอนที่เราจะใช้ (รวมถึงไอคอนจัดเรียง)
+// 1. Import ไอคอน (เพิ่ม Search)
 import { 
     Store, 
     ShoppingCart, 
     ImageIcon, 
-    Filter, // ไอคอนจัดเรียง (ค่าเริ่มต้น)
-    ArrowDownAZ, // ไอคอนเรียงตามชื่อ
-    ArrowDownWideNarrow // ไอคอนเรียงตามราคา (น้อยไปมาก)
+    Filter, 
+    ArrowDownAZ, 
+    ArrowDownWideNarrow,
+    Search, // 2. เพิ่มไอคอนค้นหา
+    Plus // 1. เพิ่มไอคอน Plus
 } from 'lucide-react';
 
 // -- COMPONENT 1: Header (Navbar) --
@@ -63,17 +64,41 @@ function ProductCard({ product }: { product: Product }) {
             {/* รูปสินค้า */}
             <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
                 {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                    <img 
+                        src={product.imageUrl} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                            // In case the image fails to load, show a placeholder
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null; // Prevent infinite loop
+                            target.src = `https://placehold.co/300x300/e2e8f0/8a4f1a?text=Image+Error`;
+                        }}
+                    />
                 ) : (
                     <ImageIcon size={48} className="text-gray-400" />
                 )}
             </div>
             {/* รายละเอียดสินค้า */}
             <div className="p-4">
-                <h3 className="font-semibold text-lg text-gray-800 mb-2">{product.name}</h3>
-                <p className="text-amber-800 font-bold text-lg">
-                    {product.price.toLocaleString('th-TH', { style: 'currency', currency: 'THB' })}
-                </p>
+                <h3 className="font-semibold text-lg text-gray-800 mb-2 truncate" title={product.name}>{product.name}</h3>
+                
+                {/* 2. สร้าง Flex container สำหรับราคาและปุ่มบวก */}
+                <div className="flex justify-between items-center mt-2">
+                    <p className="text-amber-800 font-bold text-lg">
+                        {product.price.toLocaleString('th-TH', { style: 'currency', currency: 'THB' })}
+                    </p>
+                    
+                    {/* 3. ปุ่ม "บวก" สำหรับเพิ่มเข้าตะกร้า */}
+                    <button 
+                        onClick={() => console.log(`Added ${product.name} to cart`)} // Placeholder action
+                        className="bg-amber-800 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-amber-700 transition-colors shadow"
+                        aria-label={`เพิ่ม ${product.name} ลงในตะกร้า`}
+                        title="เพิ่มลงตะกร้า"
+                    >
+                        <Plus size={18} />
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -87,25 +112,35 @@ const mockProducts: Product[] = [
     { id: 4, name: 'เครื่องพิมพ์ดีด', price: 4100, imageUrl: 'https://placehold.co/300x300/e2e8f0/8a4f1a?text=Typewriter' },
     { id: 5, name: 'แสตมป์เก่า', price: 500, imageUrl: 'https://placehold.co/300x300/e2e8f0/8a4f1a?text=Old+Stamp' },
     { id: 6, name: 'ไหสังคโลก', price: 8900, imageUrl: 'https://placehold.co/300x300/e2e8f0/8a4f1a?text=Pottery' },
+    { id: 7, name: 'โทรศัพท์โบราณ', price: 2200, imageUrl: 'https://placehold.co/300x300/e2e8f0/8a4f1a?text=Old+Phone' },
+    { id: 8, name: 'เหรียญเก่า', price: 750, imageUrl: 'https://placehold.co/300x300/e2e8f0/8a4f1a?text=Old+Coin' },
 ];
 
 // -- COMPONENT 3: Product Grid (Body) --
-// *** ส่วนนี้คือส่วนที่เราเพิ่ม Logic การจัดเรียง ***
+// *** ส่วนนี้คือส่วนที่เราเพิ่ม Logic การค้นหาและจัดเรียง ***
 function ProductGrid() {
     
-    // 2. ใช้ useState เก็บสถานะการจัดเรียง (0=ค่าเริ่มต้น, 1=ชื่อ, 2=ราคา)
-    const [sortState, setSortState] = useState(0);
+    // สถานะสำหรับจัดเรียง
+    const [sortState, setSortState] = useState(0); // 0: default, 1: name, 2: price
+    
+    // 3. เพิ่ม State สำหรับเก็บค่าในช่องค้นหา
+    const [searchTerm, setSearchTerm] = useState("");
 
-    // 3. ใช้ useMemo เพื่อคำนวณรายการสินค้าที่จะแสดงผลใหม่
-    // (จะทำงานใหม่ก็ต่อเมื่อ mockProducts หรือ sortState เปลี่ยนไป)
-    const sortedProducts = useMemo(() => {
-        // 0 = ค่าเริ่มต้น (ตาม mockProducts)
+    // 4. อัปเดต useMemo ให้กรองข้อมูล (filter) ก่อน แล้วจึงจัดเรียง (sort)
+    const filteredAndSortedProducts = useMemo(() => {
+        
+        // 4.1 กรองตาม searchTerm ก่อน
+        const filteredProducts = mockProducts.filter(product => 
+            product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        // 4.2 จัดเรียง
         if (sortState === 0) {
-            return mockProducts;
+            return filteredProducts; // คืนค่าที่กรองแล้ว (แต่ยังไม่จัดเรียง)
         }
         
-        // สร้าง Array ใหม่เพื่อไม่ให้กระทบข้อมูลเดิม
-        const sorted = [...mockProducts];
+        // สร้าง Array ใหม่จากข้อมูลที่กรองแล้วเพื่อจัดเรียง
+        const sorted = [...filteredProducts];
 
         if (sortState === 1) { // 1 = เรียงตามชื่อ
             sorted.sort((a, b) => a.name.localeCompare(b.name, 'th'));
@@ -114,14 +149,14 @@ function ProductGrid() {
         }
 
         return sorted;
-    }, [sortState]); // ให้คำนวณใหม่เมื่อ sortState เปลี่ยน
+    }, [sortState, searchTerm]); // 5. เพิ่ม searchTerm ใน dependencies
 
-    // 4. ฟังก์ชันสำหรับสลับการจัดเรียง (0 -> 1 -> 2 -> 0)
+    // ฟังก์ชันสำหรับสลับการจัดเรียง
     const toggleSort = () => {
         setSortState((currentState) => (currentState + 1) % 3);
     };
 
-    // 5. ฟังก์ชันช่วยสำหรับแสดงไอคอนและข้อความของปุ่ม
+    // ฟังก์ชันช่วยสำหรับแสดงไอคอนและข้อความของปุ่ม
     const getSortInfo = () => {
         if (sortState === 1) {
             return { icon: <ArrowDownAZ size={16} />, text: 'ตามชื่อ', active: true };
@@ -135,33 +170,65 @@ function ProductGrid() {
     const sortInfo = getSortInfo();
 
     return (
-        <main className="container mx-auto px-6 py-8">
-            <div className="bg-white p-6 rounded-lg shadow-lg">
+        <main className="container mx-auto px-4 sm:px-6 py-8">
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
                 
-                {/* 6. ปุ่มจัดเรียง (เชื่อมต่อกับ React State) */}
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">สินค้าน่าสนใจ</h2>
+                {/* 6. ปรับ Layout ส่วนหัว (H2, Search, Sort) */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <h2 className="text-2xl font-bold text-gray-800 flex-shrink-0">สินค้าน่าสนใจ</h2>
                     
-                    <button 
-                        onClick={toggleSort} // 7. เรียกใช้ฟังก์ชัน toggleSort
-                        title="จัดเรียงสินค้า"
-                        className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm transition-colors ${
-                            sortInfo.active
-                                ? 'bg-amber-800 text-white' // สถานะ Active
-                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300' // สถานะปกติ
-                        }`}
-                    >
-                        <span className="inline-block w-4 h-4">{sortInfo.icon}</span>
-                        <span>{sortInfo.text}</span>
-                    </button>
+                    {/* 7. เพิ่ม Container สำหรับช่องค้นหาและปุ่มจัดเรียง */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+                        
+                        {/* 8. ช่องค้นหา */}
+                        <div className="relative w-full sm:w-auto">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                <Search size={18} />
+                            </span>
+                            <input 
+                                type="text"
+                                placeholder="ค้นหาด้วยชื่อ..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="border border-gray-300 rounded-full px-4 py-2 text-sm pl-10 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-transparent transition-all"
+                            />
+                        </div>
+
+                        {/* 9. ปุ่มจัดเรียง (เหมือนเดิม แต่ปรับ w-full) */}
+                        <button 
+                            onClick={toggleSort}
+                            title="จัดเรียงสินค้า"
+                            className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-full text-sm transition-colors w-full sm:w-auto ${
+                                sortInfo.active
+                                    ? 'bg-amber-800 text-white shadow-md'
+                                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                            }`}
+                        >
+                            <div className="flex-shrink-0 w-4 h-4">{sortInfo.icon}</div>
+                            <span>{sortInfo.text}</span>
+                        </button>
+                    </div>
                 </div>
 
-                {/* 8. ตารางสินค้า (ใช้ sortedProducts ที่คำนวณแล้ว) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {sortedProducts.map(product => (
-                        <ProductCard key={product.id} product={product} />
-                    ))}
-                </div>
+                {/* 10. ตารางสินค้า (ใช้ filteredAndSortedProducts) */}
+                {/* 11. เพิ่มการตรวจสอบว่ามีสินค้าหรือไม่ */}
+                {filteredAndSortedProducts.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {filteredAndSortedProducts.map(product => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                ) : (
+                    // 12. แสดงข้อความเมื่อไม่พบสินค้า
+                    <div className="text-center text-gray-500 py-16">
+                        <p className="text-lg font-semibold">ไม่พบสินค้าที่ตรงกัน</p>
+                        {searchTerm && (
+                            <p className="text-sm mt-1">
+                                จากคำค้นหา: {searchTerm}
+                            </p>
+                        )}
+                    </div>
+                )}
             </div>
         </main>
     );
@@ -170,8 +237,6 @@ function ProductGrid() {
 // -- COMPONENT 4: Floating Cart Button --
 // (เหมือนเดิมจากโค้ดที่คุณให้มา)
 function CartButton() {
-
-    // 3. เปลี่ยนจาก <button> เป็น <a> (แท็ก Link ธรรมดา)
     return (
         <a
             href="/bucket" // 4. ใช้ href เพื่อไปยังหน้าตะกร้า
@@ -186,7 +251,8 @@ function CartButton() {
 // -- MAIN APP COMPONENT --
 export default function AntiqueShopPage() {
     return (
-        <div className="min-h-screen bg-gray-100 font-sans">
+        // ใช้ Inter font (ถ้า Tailwind config ตั้งไว้) และ anti-aliased เพื่อความสวยงาม
+        <div className="min-h-screen bg-gray-100 font-sans antialiased">
             <Header />
             <ProductGrid />
             <CartButton />
