@@ -33,14 +33,21 @@ export default function LandingPage() {
           </a>
 
           {/* ช่องสี่เหลี่ยมที่สอง: เข้าสู่ระบบ */}
-          <button className="w-full bg-gray-200 text-gray-800 py-3 rounded-md text-lg font-semibold hover:bg-gray-300 transition-colors">
+          <a
+            href="/login" // นี่คือลิ้งค์ปเข้าสู่เว็ป
+            className="w-full bg-amber-800 text-white py-3 rounded-md text-lg font-semibold hover:bg-amber-700 transition-colors text-center"
+          >
             เข้าสู่ระบบ
-          </button>
+          </a>
 
           {/* ช่องสี่เหลี่ยมที่สาม: สมัครสมาชิก */}
-          <button className="w-full border-2 border-amber-800 text-amber-800 py-3 rounded-md text-lg font-semibold hover:bg-amber-50 transition-colors">
+          <a
+            href="/register" // นี่คือลิ้งค์ปเข้าสู่เว็ป
+            className="w-full bg-amber-800 text-white py-3 rounded-md text-lg font-semibold hover:bg-amber-700 transition-colors text-center"
+          >
             สมัครสมาชิก
-          </button>
+          </a>
+
 
         </div>
 

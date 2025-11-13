@@ -39,6 +39,15 @@ const IconMoney = ({ className }: IconProps) => (
     </svg>
 );
 
+// 2. ไอคอน: ผิด (เพิ่มใหม่)
+const IconError = ({ className }: IconProps) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="15" y1="9" x2="9" y2="15" />
+        <line x1="9" y1="9" x2="15" y2="15" />
+    </svg>
+);
+
 // --- กำหนด Type ---
 // (ลบ IconProps ที่ซ้ำซ้อนจากตรงนี้)
 
@@ -50,30 +59,6 @@ type CartItem = {
     price: number;
     imageUrl: string;
 };
-
-// --- ข้อมูลสินค้าตัวอย่าง --- (เปลี่ยนชื่อจาก initialItems)
-const sampleProducts: CartItem[] = [
-    {
-        id: 1,
-        name: 'สินค้าชิ้นที่ 1',
-        description: 'รายละเอียดสั้นๆ ของสินค้า',
-        quantity: 1,
-        price: 1200.00,
-        imageUrl: 'https://placehold.co/80x80/e0e0e0/333?text=Product+1'
-    },
-    {
-        id: 2,
-        name: 'สินค้าชิ้นที่ 2',
-        description: 'อีกหนึ่งรายละเอียดสินค้า',
-        quantity: 2,
-        price: 350.00,
-        imageUrl: 'https://placehold.co/80x80/a0a0a0/eee?text=Product+2'
-    }
-];
-
-//
-// *** ส่วนที่แก้ไข: ย้ายคอมโพเนนต์ออกมาข้างนอก ***
-//
 
 // --- 1. คอมโพเนนต์สำหรับแถบสถานะ ---
 // รับ props: currentStep และ handleNextStep
@@ -130,7 +115,7 @@ const StatusTracker = ({ currentStep, handleNextStep }: StatusTrackerProps) => {
                     );
                 })}
             </div>
-            {/* ปุ่มชั่วคราวสำหรับทดสอบ (ลบออกแล้ว) */}
+            {/* ปุ่มชั่วคราวสำหรับทดสอบ */}
             {/* <div className="text-center mt-6">
                 <button 
                     onClick={handleNextStep}
@@ -243,6 +228,7 @@ export default function App() {
             }
         });
     };
+    
 
     // ฟังก์ชัน (ชั่วคราว) สำหรับเลื่อนสถานะ
     const handleNextStep = () => {
@@ -260,8 +246,7 @@ export default function App() {
     // โครงสร้างหน้าหลัก
     return (
         <div className="bg-gray-100 min-h-screen p-4 md:p-8 font-['Inter',_sans-serif]">
-            <div className="max-w-3xl mx-auto">
-                
+            <div className="max-w-3xl mx-auto">   
                 {/* สถานะ */}
                 <StatusTracker 
                     currentStep={currentStep} 

@@ -15,9 +15,9 @@ interface ProfileData {
 export default function Page() {
     // State for form data
     const [formData, setFormData] = useState<ProfileData>({
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@example.com",
+        firstName: "",
+        lastName: "",
+        email: "",
         gender: "ชาย",
         profileImage: null,
     });
@@ -27,22 +27,6 @@ export default function Page() {
 
     // Reference for the file input element
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // State for background color transition
-    const [backgroundColor, setBackgroundColor] = useState("bg-sky-200");
-    const colors = ["bg-sky-200", "bg-emerald-200", "bg-yellow-200", "bg-fuchsia-200", "bg-rose-200"];
-
-    useEffect(() => {
-        // Function to handle background color change
-        const changeColor = () => {
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            setBackgroundColor(randomColor);
-        };
-        const intervalId = setInterval(changeColor, 100);
-
-        // Cleanup interval on component unmount
-        return () => clearInterval(intervalId);
-    }, []);
 
     // Handle form input changes
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -67,7 +51,7 @@ export default function Page() {
     };
 
     return (
-        <div className={`flex min-h-screen items-center justify-center p-6 sm:p-24 transition-colors duration-1000 ${backgroundColor}`}>
+        <div className={`flex min-h-screen items-center justify-center p-6 sm:p-24 transition-colors duration-1000`}>
             <div className="flex flex-col items-center w-full max-w-lg p-8 bg-white bg-opacity-80 rounded-3xl shadow-2xl">
                 <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight mb-6">
                     แก้ไขโปรไฟล์
@@ -150,19 +134,6 @@ export default function Page() {
                                 className="mt-1 block w-full rounded-full border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3"
                             />
                         </div>
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                รหัสผ่าน (เว้นว่างหากไม่ต้องการเปลี่ยน)
-                            </label>
-                            <input
-                                type="password"
-                                name="password"
-                                id="password"
-                                value={formData.password}
-                                onChange={handleInputChange}
-                                className="mt-1 block w-full rounded-full border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3"
-                            />
-                        </div>
                     </div>
 
                     {/* Gender Selection */}
@@ -187,17 +158,17 @@ export default function Page() {
                     {/* Action Buttons */}
                     <div className="flex justify-between mt-8 space-x-4">
                         <button
+                            type="submit"
+                            className="flex-1 py-3 text-lg font-semibold text-white bg-emerald-500 hover:bg-emerald-600 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
+                        >
+                            บันทึก
+                        </button>
+                        <button
                             type="button"
                             onClick={() => window.location.href = '/dashboard'}
                             className="flex-1 py-3 text-lg font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
                         >
                             ย้อนกลับ
-                        </button>
-                        <button
-                            type="submit"
-                            className="flex-1 py-3 text-lg font-semibold text-white bg-emerald-500 hover:bg-emerald-600 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
-                        >
-                            บันทึก
                         </button>
                     </div>
                 </form>
