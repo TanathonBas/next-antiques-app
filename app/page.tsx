@@ -34,7 +34,7 @@ export default function LandingPage() {
 
           {/* ช่องสี่เหลี่ยมที่สอง: เข้าสู่ระบบ */}
           <a
-            href="/login" // นี่คือลิ้งค์ปเข้าสู่เว็ป
+            href="/login" 
             className="w-full bg-amber-800 text-white py-3 rounded-md text-lg font-semibold hover:bg-amber-700 transition-colors text-center"
           >
             เข้าสู่ระบบ
@@ -42,7 +42,7 @@ export default function LandingPage() {
 
           {/* ช่องสี่เหลี่ยมที่สาม: สมัครสมาชิก */}
           <a
-            href="/register" // นี่คือลิ้งค์ปเข้าสู่เว็ป
+            href="/register" 
             className="w-full bg-amber-800 text-white py-3 rounded-md text-lg font-semibold hover:bg-amber-700 transition-colors text-center"
           >
             สมัครสมาชิก

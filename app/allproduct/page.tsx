@@ -58,7 +58,7 @@ interface Product {
 
 // -- COMPONENT 2: Product Card --
 // (เหมือนเดิมจากโค้ดที่คุณให้มา)
-function ProductCard({ product }: { product: Product }) {
+function ProductCard({ product, onAddToCart }: { product: Product, onAddToCart: () => void }) {
     return (
         <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             {/* รูปสินค้า */}
@@ -89,9 +89,9 @@ function ProductCard({ product }: { product: Product }) {
                         {product.price.toLocaleString('th-TH', { style: 'currency', currency: 'THB' })}
                     </p>
                     
-                    {/* 3. ปุ่ม "บวก" สำหรับเพิ่มเข้าตะกร้า */}
+                    {/* 3. ปุ่ม "บวก" สำหรับเพิ่มเข้าตะกร้า - เปลี่ยน onClick */}
                     <button 
-                        onClick={() => console.log(`Added ${product.name} to cart`)} // Placeholder action
+                        onClick={onAddToCart} // <--- เปลี่ยนตรงนี้
                         className="bg-amber-800 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-amber-700 transition-colors shadow"
                         aria-label={`เพิ่ม ${product.name} ลงในตะกร้า`}
                         title="เพิ่มลงตะกร้า"
@@ -118,7 +118,7 @@ const mockProducts: Product[] = [
 
 // -- COMPONENT 3: Product Grid (Body) --
 // *** ส่วนนี้คือส่วนที่เราเพิ่ม Logic การค้นหาและจัดเรียง ***
-function ProductGrid() {
+function ProductGrid({ onAddToCart }: { onAddToCart: () => void }) {
     
     // สถานะสำหรับจัดเรียง
     const [sortState, setSortState] = useState(0); // 0: default, 1: name, 2: price
@@ -215,7 +215,7 @@ function ProductGrid() {
                 {filteredAndSortedProducts.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {filteredAndSortedProducts.map(product => (
-                            <ProductCard key={product.id} product={product} />
+                            <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} /> // <--- ส่ง prop ไปที่นี่
                         ))}
                     </div>
                 ) : (
@@ -236,7 +236,7 @@ function ProductGrid() {
 
 // -- COMPONENT 4: Floating Cart Button --
 // (เหมือนเดิมจากโค้ดที่คุณให้มา)
-function CartButton() {
+function CartButton({ itemCount }: { itemCount: number }) { // <--- รับ itemCount
     return (
         <a
             href="/bucket" // 4. ใช้ href เพื่อไปยังหน้าตะกร้า
@@ -244,18 +244,34 @@ function CartButton() {
             aria-label="เปิดตะกร้าสินค้า"
         >
             <ShoppingCart size={28} />
+            
+            {/* เพิ่ม Badge แสดงจำนวนสินค้า */}
+            {itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                    {itemCount}
+                </span>
+            )}
         </a>
     );
 }
 
 // -- MAIN APP COMPONENT --
 export default function AntiqueShopPage() {
+    // 1. เพิ่ม State สำหรับนับจำนวนสินค้าในตะกร้า
+    const [cartItemCount, setCartItemCount] = useState(0);
+
+    // 2. สร้างฟังก์ชันสำหรับเพิ่มสินค้า (แค่เพิ่มจำนวนนับ)
+    const handleAddToCart = () => {
+        setCartItemCount(prevCount => prevCount + 1);
+    };
+
     return (
         // ใช้ Inter font (ถ้า Tailwind config ตั้งไว้) และ anti-aliased เพื่อความสวยงาม
         <div className="min-h-screen bg-gray-100 font-sans antialiased">
             <Header />
-            <ProductGrid />
-            <CartButton />
+            {/* 3. ส่งฟังก์ชัน onAddToCart และ itemCount ไปยัง Component ลูก */}
+            <ProductGrid onAddToCart={handleAddToCart} />
+            <CartButton itemCount={cartItemCount} />
         </div>
     );
 }

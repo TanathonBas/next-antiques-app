@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import Link from 'next/link';
+// import Link from 'next/link'; // ลบออกเพื่อใช้ <a> สำหรับการพรีวิว
 
 // --- ไอคอน SVG ---
 
@@ -12,10 +12,7 @@ type IconProps = {
 
 // ไอคอน: ลังสินค้า
 const IconBox = ({ className }: IconProps) => (
-    <svg className={className} xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        {/*
-          <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        */}
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 10c0-1.1-.9-2-2-2h-6.2c-.4 0-.7-.2-.9-.5l-1.4-2c-.3-.4-.8-.6-1.3-.6H4.8C3.8 5 3 5.9 3 7v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4M7 15h10"/>
         <path d="M12 11v6"/>
     </svg>
@@ -41,16 +38,75 @@ const IconMoney = ({ className }: IconProps) => (
 
 // 2. ไอคอน: ผิด (เพิ่มใหม่)
 const IconError = ({ className }: IconProps) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="15" y1="9" x2="9" y2="15" />
-        <line x1="9" y1="9" x2="15" y2="15" />
-    </svg>
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="15" y1="9" x2="9" y2="15" />
+        <line x1="9" y1="9" x2="15" y2="15" />
+    </svg>
 );
 
-// --- กำหนด Type ---
-// (ลบ IconProps ที่ซ้ำซ้อนจากตรงนี้)
+// --- 4. (เพิ่ม) คอมโพเนนต์สำหรับป็อปอัพ (Modal) ---
+type ModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    children: React.ReactNode;
+};
 
+// คอมโพเนนต์ Modal พื้นฐาน
+const Modal = ({ isOpen, onClose, children }: ModalProps) => {
+    if (!isOpen) return null;
+
+    return (
+        <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4"
+            onClick={onClose} // ปิดเมื่อคลิกพื้นหลัง
+        >
+            <div 
+                className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 relative"
+                onClick={e => e.stopPropagation()} // ป้องกันการปิดเมื่อคลิกที่ตัว Modal
+            >
+                {/*ปุ่มกากบาท (X) ที่ผู้ใช้ขอ */}
+                <button 
+                    onClick={onClose}
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 rounded-full"
+                >
+                    <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                {children}
+            </div>
+        </div>
+    );
+};
+
+// (เพิ่ม) คอมโพเนนต์สำหรับป็อปอัพ "ตะกร้าว่าง"
+type ErrorModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+};
+
+const EmptyCartModal = ({ isOpen, onClose }: ErrorModalProps) => (
+    <Modal isOpen={isOpen} onClose={onClose}>
+        <div className="text-center">
+            {/* ใช้ไอคอนที่คุณเพิ่มเข้ามา */}
+            <IconError className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-800 mb-2">ตะกร้าสินค้าว่าง</h3>
+            <p className="text-gray-600 mb-4">
+                กรุณาเพิ่มสินค้าลงในตะกร้าก่อนดำเนินการชำระเงิน
+            </p>
+            <a 
+                href="/allproduct"
+                className="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-lg mt-6 hover:bg-red-600"
+            >
+                ปิด
+            </a>
+        </div>
+    </Modal>
+);
+
+
+// --- กำหนด Type ---
 type CartItem = {
     id: number;
     name: string;
@@ -115,14 +171,14 @@ const StatusTracker = ({ currentStep, handleNextStep }: StatusTrackerProps) => {
                     );
                 })}
             </div>
-            {/* ปุ่มชั่วคราวสำหรับทดสอบ */}
+            {/* (ลบ) ปุ่มชั่วคราวสำหรับทดสอบ */}
             {/* <div className="text-center mt-6">
-                <button 
-                    onClick={handleNextStep}
-                    className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm hover:bg-blue-200 transition-colors"
-                >
-                    (ทดสอบ) เลื่อนสถานะ
-                </button>
+                 <button 
+                     onClick={handleNextStep}
+                     className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm hover:bg-blue-200 transition-colors"
+                 >
+                     (ทดสอบ) เลื่อนสถานะ
+                 </button>
             </div> 
             */}
         </div>
@@ -166,14 +222,15 @@ const CartItemsList = ({ cartItems, handleRemoveItem }: CartItemsListProps) => (
 );
 
 // --- 3. คอมโพเนนต์สำหรับสรุปยอด ---
-// รับ props: subtotal, shipping, และ total
+// รับ props: subtotal, shipping, total และ (เพิ่ม) handleCheckoutClick
 type OrderSummaryProps = {
     subtotal: number;
     shipping: number;
     total: number;
+    handleCheckoutClick: () => void; // เพิ่ม prop นี้
 };
 
-const OrderSummary = ({ subtotal, shipping, total }: OrderSummaryProps) => (
+const OrderSummary = ({ subtotal, shipping, total, handleCheckoutClick }: OrderSummaryProps) => ( // เพิ่ม handleCheckoutClick
     <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">สรุปยอด</h2>
         <div className="space-y-2">
@@ -191,21 +248,27 @@ const OrderSummary = ({ subtotal, shipping, total }: OrderSummaryProps) => (
                 <span className="text-blue-600">฿{total.toFixed(2)}</span>
             </div>
         </div>
-        <Link href="/payment" className="w-full">
-            <button className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg mt-6 hover:bg-blue-700 transition-colors">
-                ไปที่หน้าชำระเงิน
-            </button>
-        </Link>
+        {/* (แก้ไข) เปลี่ยนจาก <a> เป็น <button> และใช้ onClick จาก prop */}
+        <button 
+            onClick={handleCheckoutClick} // ใช้ prop ที่ส่งมา
+            className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg mt-6 hover:bg-blue-700 transition-colors"
+        >
+            ไปที่หน้าชำระเงิน
+        </button>
     </div>
 );
 
 
 // คอมโพเนนต์หลัก
 export default function App() {
-    // สถานะสำหรับเก็บรายการสินค้า (เริ่มต้นเป็น 0 ชิ้น)
+    // (แก้ไข) สถานะสำหรับเก็บรายการสินค้า (เริ่มต้นเป็น 0 ชิ้น)
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    
     // สถานะสำหรับเก็บขั้นตอนการจัดส่ง (1, 2, หรือ 3)
     const [currentStep, setCurrentStep] = useState(1);
+
+    // (เพิ่ม) สถานะสำหรับ Modal ตะกร้าว่าง
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // ฟังก์ชันสำหรับลบสินค้า
     const handleRemoveItem = (id: number) => {
@@ -235,6 +298,18 @@ export default function App() {
         setCurrentStep(prev => (prev < 3 ? prev + 1 : 1)); // วนกลับไป 1 เมื่อถึง 3
     };
 
+    // (เพิ่ม) ฟังก์ชันสำหรับจัดการการกดปุ่มชำระเงิน
+    const handleCheckoutClick = () => {
+        if (cartItems.length === 0) {
+            setIsModalOpen(true); // เปิด Modal
+        } else {
+            // ถ้ามีสินค้า ให้ไปหน้าชำระเงิน
+            console.log("กำลังไปหน้าชำระเงิน...");
+            // เราจะไม่ใช้ alert() ในแอปจริง แต่ใช้ชั่วคราวเพื่อแสดงผล
+            // alert("กำลังไปหน้าชำระเงิน..."); 
+        }
+    };
+
     // คำนวณราคาสรุป
     const { subtotal, shipping, total } = useMemo(() => {
         const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -246,7 +321,7 @@ export default function App() {
     // โครงสร้างหน้าหลัก
     return (
         <div className="bg-gray-100 min-h-screen p-4 md:p-8 font-['Inter',_sans-serif]">
-            <div className="max-w-3xl mx-auto">   
+            <div className="max-w-3xl mx-auto">    
                 {/* สถานะ */}
                 <StatusTracker 
                     currentStep={currentStep} 
@@ -264,8 +339,15 @@ export default function App() {
                     subtotal={subtotal} 
                     shipping={shipping} 
                     total={total}
+                    handleCheckoutClick={handleCheckoutClick} // ส่งฟังก์ชันไป
                 />
             </div>
+
+            {/* (เพิ่ม) Render Modal */}
+            <EmptyCartModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+            />
         </div>
     );
 }
