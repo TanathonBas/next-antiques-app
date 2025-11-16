@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 // Interfaces for type safety
 interface FormData {
     fullName: string;
+    lastName: string;
     email: string;
     password: string;
     gender: "male" | "female" | "other" | "";
@@ -14,6 +15,7 @@ interface FormData {
 export default function Page() {
     const [formData, setFormData] = useState<FormData>({
         fullName: "",
+        lastName: "",
         email: "",
         password: "",
         gender: "",
@@ -53,7 +55,7 @@ export default function Page() {
                 <form onSubmit={handleSubmit} className="w-full space-y-6">
                     <div>
                         <label htmlFor="fullName" className="block text-sm font-medium text-gray-900">
-                            ชื่อ-นามสกุล
+                            ชื่อ
                         </label>
                         <input
                             type="text"
@@ -61,6 +63,20 @@ export default function Page() {
                             id="fullName"
                             required
                             value={formData.fullName}
+                            onChange={handleInputChange}
+                            className="mt-1 block w-full rounded-full border-gray-500 shadow-sm focus:border-amber-500 focus:ring-amber-500 p-3"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="fullName" className="block text-sm font-medium text-gray-900">
+                            นามสกุล
+                        </label>
+                        <input
+                            type="text"
+                            name="lastName"
+                            id="lastName"
+                            required
+                            value={formData.lastName}
                             onChange={handleInputChange}
                             className="mt-1 block w-full rounded-full border-gray-500 shadow-sm focus:border-amber-500 focus:ring-amber-500 p-3"
                         />
