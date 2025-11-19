@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useRouter } from "next/navigation";
 // import Link from 'next/link'; // ลบออกเพื่อใช้ <a> สำหรับการพรีวิว
 
 // --- ไอคอน SVG ---
@@ -13,26 +14,26 @@ type IconProps = {
 // ไอคอน: ลังสินค้า
 const IconBox = ({ className }: IconProps) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 10c0-1.1-.9-2-2-2h-6.2c-.4 0-.7-.2-.9-.5l-1.4-2c-.3-.4-.8-.6-1.3-.6H4.8C3.8 5 3 5.9 3 7v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4M7 15h10"/>
-        <path d="M12 11v6"/>
+        <path d="M21 10c0-1.1-.9-2-2-2h-6.2c-.4 0-.7-.2-.9-.5l-1.4-2c-.3-.4-.8-.6-1.3-.6H4.8C3.8 5 3 5.9 3 7v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4M7 15h10" />
+        <path d="M12 11v6" />
     </svg>
 );
 
 // ไอคอน: รถ
 const IconTruck = ({ className }: IconProps) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 18H3c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v3.5"/>
-        <path d="M15 9h4l3 3v4h-8v-7z"/>
-        <circle cx="18" cy="18" r="2"/>
-        <circle cx="7" cy="18" r="2"/>
+        <path d="M5 18H3c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v3.5" />
+        <path d="M15 9h4l3 3v4h-8v-7z" />
+        <circle cx="18" cy="18" r="2" />
+        <circle cx="7" cy="18" r="2" />
     </svg>
 );
 
 // ไอคอน: เงิน
 const IconMoney = ({ className }: IconProps) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" x2="12" y1="1" y2="23"/>
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        <line x1="12" x2="12" y1="1" y2="23" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
 );
 
@@ -57,16 +58,16 @@ const Modal = ({ isOpen, onClose, children }: ModalProps) => {
     if (!isOpen) return null;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4"
             onClick={onClose} // ปิดเมื่อคลิกพื้นหลัง
         >
-            <div 
+            <div
                 className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 relative"
                 onClick={e => e.stopPropagation()} // ป้องกันการปิดเมื่อคลิกที่ตัว Modal
             >
                 {/*ปุ่มกากบาท (X) ที่ผู้ใช้ขอ */}
-                <button 
+                <button
                     onClick={onClose}
                     className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 rounded-full"
                 >
@@ -95,7 +96,7 @@ const EmptyCartModal = ({ isOpen, onClose }: ErrorModalProps) => (
             <p className="text-gray-600 mb-4">
                 กรุณาเพิ่มสินค้าลงในตะกร้าก่อนดำเนินการชำระเงิน
             </p>
-            <a 
+            <a
                 href="/allproduct"
                 className="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-lg mt-6 hover:bg-red-600"
             >
@@ -133,16 +134,16 @@ const StatusTracker = ({ currentStep, handleNextStep }: StatusTrackerProps) => {
     return (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-xl font-bold text-center mb-8 text-gray-800">สถานะการสั่งซื้อ</h2>
-            
+
             <div className="relative flex justify-between items-start max-w-xl mx-auto">
                 {/* เส้นเชื่อมพื้นหลัง (สีเทา) */}
                 <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200" style={{ transform: 'translateY(-50%)', zIndex: 1 }}></div>
-                
+
                 {/* เส้นเชื่อม (Active - สีฟ้า) */}
-                <div 
+                <div
                     className="absolute top-5 left-0 h-1 bg-blue-500"
-                    style={{ 
-                        transform: 'translateY(-50%)', 
+                    style={{
+                        transform: 'translateY(-50%)',
                         zIndex: 2,
                         width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
                         transition: 'width 0.3s ease'
@@ -155,16 +156,14 @@ const StatusTracker = ({ currentStep, handleNextStep }: StatusTrackerProps) => {
 
                     return (
                         <div key={step.name} className="text-center relative z-10">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto border-2 transition-all duration-300 ${
-                                isActive 
-                                ? 'bg-blue-500 border-blue-500 text-white' 
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto border-2 transition-all duration-300 ${isActive
+                                ? 'bg-blue-500 border-blue-500 text-white'
                                 : 'bg-white border-gray-300 text-gray-400'
-                            }`}>
+                                }`}>
                                 {step.icon}
                             </div>
-                            <p className={`text-sm mt-2 transition-all duration-300 ${
-                                isActive ? 'font-semibold text-gray-800' : 'text-gray-500'
-                            }`}>
+                            <p className={`text-sm mt-2 transition-all duration-300 ${isActive ? 'font-semibold text-gray-800' : 'text-gray-500'
+                                }`}>
                                 {step.name}
                             </p>
                         </div>
@@ -195,7 +194,7 @@ type CartItemsListProps = {
 const CartItemsList = ({ cartItems, handleRemoveItem }: CartItemsListProps) => (
     <div className="space-y-4 mb-6">
         <h2 className="text-xl font-semibold text-gray-800">รายการสินค้า ({cartItems.length} ชิ้น)</h2>
-        
+
         {cartItems.length === 0 ? (
             <p className="text-gray-600 bg-white rounded-lg shadow-md p-4">ไม่มีสินค้าในตะกร้า</p>
         ) : (
@@ -206,9 +205,9 @@ const CartItemsList = ({ cartItems, handleRemoveItem }: CartItemsListProps) => (
                         <p className="text-sm text-gray-600 truncate">{item.description}</p>
                         <p className="text-sm text-gray-500">จำนวน: {item.quantity}</p>
                     </div>
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                         <p className="font-semibold text-gray-900">฿{(item.price * item.quantity).toFixed(2)}</p>
-                        <button 
+                        <button
                             className="text-red-500 hover:text-red-700 text-sm mt-1"
                             onClick={() => handleRemoveItem(item.id)}
                         >
@@ -249,7 +248,7 @@ const OrderSummary = ({ subtotal, shipping, total, handleCheckoutClick }: OrderS
             </div>
         </div>
         {/* (แก้ไข) เปลี่ยนจาก <a> เป็น <button> และใช้ onClick จาก prop */}
-        <button 
+        <button
             onClick={handleCheckoutClick} // ใช้ prop ที่ส่งมา
             className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg mt-6 hover:bg-blue-700 transition-colors"
         >
@@ -261,37 +260,76 @@ const OrderSummary = ({ subtotal, shipping, total, handleCheckoutClick }: OrderS
 
 // คอมโพเนนต์หลัก
 export default function App() {
-    // (แก้ไข) สถานะสำหรับเก็บรายการสินค้า (เริ่มต้นเป็น 0 ชิ้น)
+    const router = useRouter();
+    const STORAGE_KEY = "cart_items";
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
-    
+
     // สถานะสำหรับเก็บขั้นตอนการจัดส่ง (1, 2, หรือ 3)
     const [currentStep, setCurrentStep] = useState(1);
 
     // (เพิ่ม) สถานะสำหรับ Modal ตะกร้าว่าง
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // ฟังก์ชันสำหรับลบสินค้า
-    const handleRemoveItem = (id: number) => {
-        setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        const loadCart = () => {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) {
+                setCartItems([]);
+                return;
+            }
+            try {
+                const parsed = JSON.parse(stored) as CartItem[];
+                setCartItems(parsed);
+            } catch (error) {
+                console.error("Failed to parse cart items:", error);
+            }
+        };
+
+        loadCart();
+
+        const handleStorage = (event: StorageEvent) => {
+            if (event.key === STORAGE_KEY) {
+                loadCart();
+            }
+        };
+
+        window.addEventListener("storage", handleStorage);
+        return () => window.removeEventListener("storage", handleStorage);
+    }, []);
+
+    const persistCart = (items: CartItem[]) => {
+        if (typeof window === "undefined") return;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     };
 
-    // *** ฟังก์ชันใหม่: สำหรับเพิ่มสินค้า ***
+    const handleRemoveItem = (id: number) => {
+        setCartItems(prevItems => {
+            const updated = prevItems.filter(item => item.id !== id);
+            persistCart(updated);
+            return updated;
+        });
+    };
+
     const handleAddItem = (product: CartItem) => {
-        // เช็คว่ามีสินค้าชิ้นนี้ในตะกร้าหรือยัง
         setCartItems(prevItems => {
             const existingItem = prevItems.find(item => item.id === product.id);
+            let updated: CartItem[];
+
             if (existingItem) {
-                // ถ้ามีแล้ว, ให้อัปเดตจำนวน (quantity)
-                return prevItems.map(item =>
+                updated = prevItems.map(item =>
                     item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
                 );
             } else {
-                // ถ้ายังไม่มี, ให้เพิ่มเข้าไปใหม่ (quantity = 1)
-                return [...prevItems, { ...product, quantity: 1 }];
+                updated = [...prevItems, { ...product, quantity: 1 }];
             }
+
+            persistCart(updated);
+            return updated;
         });
     };
-    
+
 
     // ฟังก์ชัน (ชั่วคราว) สำหรับเลื่อนสถานะ
     const handleNextStep = () => {
@@ -301,13 +339,10 @@ export default function App() {
     // (เพิ่ม) ฟังก์ชันสำหรับจัดการการกดปุ่มชำระเงิน
     const handleCheckoutClick = () => {
         if (cartItems.length === 0) {
-            setIsModalOpen(true); // เปิด Modal
-        } else {
-            // ถ้ามีสินค้า ให้ไปหน้าชำระเงิน
-            console.log("กำลังไปหน้าชำระเงิน...");
-            // เราจะไม่ใช้ alert() ในแอปจริง แต่ใช้ชั่วคราวเพื่อแสดงผล
-            // alert("กำลังไปหน้าชำระเงิน..."); 
+            setIsModalOpen(true);
+            return;
         }
+        router.push("/payment");
     };
 
     // คำนวณราคาสรุป
@@ -320,31 +355,31 @@ export default function App() {
 
     // โครงสร้างหน้าหลัก
     return (
-        <div className="bg-gray-100 min-h-screen p-4 md:p-8 font-['Inter',_sans-serif]">
-            <div className="max-w-3xl mx-auto">    
+        <div className="bg-gray-100 min-h-screen p-4 md:p-8 font-['Inter',sans-serif]">
+            <div className="max-w-3xl mx-auto">
                 {/* สถานะ */}
-                <StatusTracker 
-                    currentStep={currentStep} 
-                    handleNextStep={handleNextStep} 
+                <StatusTracker
+                    currentStep={currentStep}
+                    handleNextStep={handleNextStep}
                 />
 
                 {/* รายการสินค้า */}
-                <CartItemsList 
-                    cartItems={cartItems} 
-                    handleRemoveItem={handleRemoveItem} 
+                <CartItemsList
+                    cartItems={cartItems}
+                    handleRemoveItem={handleRemoveItem}
                 />
 
                 {/* สรุปยอด */}
-                <OrderSummary 
-                    subtotal={subtotal} 
-                    shipping={shipping} 
+                <OrderSummary
+                    subtotal={subtotal}
+                    shipping={shipping}
                     total={total}
                     handleCheckoutClick={handleCheckoutClick} // ส่งฟังก์ชันไป
                 />
             </div>
 
             {/* (เพิ่ม) Render Modal */}
-            <EmptyCartModal 
+            <EmptyCartModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
             />

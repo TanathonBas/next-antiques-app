@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseclinet";
 
 // Interfaces for type safety
 interface FormData {
-    fullName: string;
+    fristName: string;
     lastName: string;
+    address: string;
     email: string;
     password: string;
     gender: "male" | "female" | "other" | "";
@@ -13,9 +16,11 @@ interface FormData {
 }
 
 export default function Page() {
+    const router = useRouter();
     const [formData, setFormData] = useState<FormData>({
-        fullName: "",
+        fristName: "",
         lastName: "",
+        address: "",
         email: "",
         password: "",
         gender: "",
@@ -23,6 +28,9 @@ export default function Page() {
     });
 
     const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -41,9 +49,86 @@ export default function Page() {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("Form Data:", formData);
+        setIsLoading(true);
+        setError(null);
+        setSuccess(false);
+
+        try {
+            // 1. สร้างผู้ใช้ใน Supabase Auth (เพื่อให้สามารถ login ได้)
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: formData.email,
+                password: formData.password,
+            });
+
+            if (authError) {
+                throw new Error(authError.message);
+            }
+
+            if (!authData.user) {
+                throw new Error("ไม่สามารถสร้างบัญชีผู้ใช้ได้");
+            }
+
+            let profilePicUrl: string | null = null;
+
+            // 2. อัปโหลดรูปโปรไฟล์ไปยัง user_bk bucket (ถ้ามี)
+            if (formData.profilePic) {
+                const fileExt = formData.profilePic.name.split('.').pop();
+                const fileName = `${authData.user.id}_${Date.now()}.${fileExt}`;
+                const filePath = `profiles/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('user_bk')
+                    .upload(filePath, formData.profilePic, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (uploadError) {
+                    console.error("Error uploading profile picture:", uploadError);
+                    // ไม่ throw error เพราะการอัปโหลดรูปไม่ใช่สิ่งที่สำคัญที่สุด
+                } else {
+                    // ดึง URL ของรูปภาพ
+                    const { data: urlData } = supabase.storage
+                        .from('user_bk')
+                        .getPublicUrl(filePath);
+
+                    if (urlData) {
+                        profilePicUrl = urlData.publicUrl;
+                    }
+                }
+            }
+
+            // 3. บันทึกข้อมูลผู้ใช้ลงในตาราง user_tb
+            const { error: dbError } = await supabase
+                .from('user_tb')
+                .insert({
+                    id: authData.user.id,
+                    fristName: formData.fristName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    address: formData.address,
+                    gender: formData.gender,
+                    user_image_url: profilePicUrl,
+                });
+
+            if (dbError) {
+                throw new Error(dbError.message);
+            }
+
+            setSuccess(true);
+
+            // รอ 2 วินาทีแล้ว redirect ไปหน้า login
+            setTimeout(() => {
+                router.push('/login');
+            }, 2000);
+
+        } catch (err: any) {
+            setError(err.message || "เกิดข้อผิดพลาดในการสมัครสมาชิก");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -59,10 +144,10 @@ export default function Page() {
                         </label>
                         <input
                             type="text"
-                            name="fullName"
-                            id="fullName"
+                            name="fristName"
+                            id="fristName"
                             required
-                            value={formData.fullName}
+                            value={formData.fristName}
                             onChange={handleInputChange}
                             className="mt-1 block w-full rounded-full border-gray-500 shadow-sm focus:border-amber-500 focus:ring-amber-500 p-3"
                         />
@@ -152,11 +237,59 @@ export default function Page() {
                             </label>
                         </div>
                     </div>
+                    <div>
+                        <label htmlFor="profilePic" className="block text-sm font-medium text-gray-700">
+                            รูปโปรไฟล์
+                        </label>
+                        <input
+                            type="file"
+                            name="profilePic"
+                            id="profilePic"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="mt-1 block w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                        />
+                    </div>
+                    {imagePreviewUrl && (
+                        <div className="flex flex-col items-center mt-4">
+                            <p className="text-gray-600 mb-2">พรีวิวรูปภาพ:</p>
+                            <img
+                                src={imagePreviewUrl}
+                                alt="Image Preview"
+                                className="w-32 h-32 object-cover rounded-full shadow-lg border-2 border-emerald-500"
+                            />
+                        </div>
+                    )}
+                    <div>
+                        <label htmlFor="address" className="block text-sm font-medium text-gray-900">
+                            ที่อยู่
+                        </label>
+                        <input
+                            type="text"
+                            name="address"
+                            id="address"
+                            required
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            className="mt-1 block w-full rounded-full border-gray-500 shadow-sm focus:border-amber-500 focus:ring-amber-500 p-3"
+                        />
+                    </div>
+                    {error && (
+                        <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                            {error}
+                        </div>
+                    )}
+                    {success && (
+                        <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                            สมัครสมาชิกสำเร็จ! กำลังนำคุณไปหน้าเข้าสู่ระบบ...
+                        </div>
+                    )}
                     <button
                         type="submit"
-                        className="w-full py-3 mt-6 text-lg font-semibold text-white bg-amber-600 hover:bg-blue-600 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
+                        disabled={isLoading}
+                        className="w-full py-3 mt-6 text-lg font-semibold text-white bg-amber-600 hover:bg-blue-600 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        ลงทะเบียน
+                        {isLoading ? "กำลังลงทะเบียน..." : "ลงทะเบียน"}
                     </button>
                 </form>
                 <div className="mt-8 text-sm">

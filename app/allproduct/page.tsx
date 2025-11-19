@@ -1,21 +1,81 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 // 1. Import ไอคอน (เพิ่ม Search)
-import { 
-    Store, 
-    ShoppingCart, 
-    ImageIcon, 
-    Filter, 
-    ArrowDownAZ, 
+import {
+    Store,
+    ShoppingCart,
+    ImageIcon,
+    Filter,
+    ArrowDownAZ,
     ArrowDownWideNarrow,
     Search, // 2. เพิ่มไอคอนค้นหา
     Plus // 1. เพิ่มไอคอน Plus
 } from 'lucide-react';
+import { supabase } from "@/lib/supabaseclinet";
+import { User } from "@supabase/supabase-js";
+
+interface UserProfile {
+    fristName: string;
+    lastName: string;
+    user_image_url: string | null;
+}
 
 // -- COMPONENT 1: Header (Navbar) --
-// (เหมือนเดิมจากโค้ดที่คุณให้มา)
 function Header() {
+    const [user, setUser] = useState<User | null>(null);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+
+    useEffect(() => {
+        const loadSession = async () => {
+            const { data } = await supabase.auth.getSession();
+            setUser(data.session?.user ?? null);
+        };
+
+        loadSession();
+
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => {
+            listener.subscription.unsubscribe();
+        };
+    }, []);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            if (!user?.id) {
+                setProfile(null);
+                return;
+            }
+
+            setIsLoadingProfile(true);
+            const { data, error } = await supabase
+                .from("user_tb")
+                .select("fristName,lastName,user_image_url")
+                .eq("id", user.id)
+                .single();
+
+            if (error) {
+                console.error("Failed to load profile:", error.message);
+                setProfile(null);
+            } else {
+                setProfile(data as UserProfile);
+            }
+            setIsLoadingProfile(false);
+        };
+
+        fetchProfile();
+    }, [user?.id]);
+
+    const profileName = profile
+        ? `${profile.fristName ?? ""} ${profile.lastName ?? ""}`.trim() || "ผู้ใช้งาน"
+        : user?.email;
+    const profileImage =
+        profile?.user_image_url || "https://placehold.co/64x64/8a4f1a/ffffff?text=U";
+
     return (
         <header className="bg-amber-900 text-white shadow-md sticky top-0 z-10">
             <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -33,16 +93,43 @@ function Header() {
                         </li>
                     </ul>
                 </div>
-                {/* ส่วนด้านขวา: Sign in / Sign up */}
-                <div className="flex items-center space-x-4">
-                    <a href="/login" className="hover:text-yellow-300 transition-colors text-sm">Sign In</a>
-                    <a
-                        href="/register"
-                        className="bg-white text-amber-900 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
-                    >
-                        Sign Up
-                    </a>
-                </div>
+                {/* ส่วนด้านขวา */}
+                {user ? (
+                    <div className="flex items-center space-x-4">
+                        <img
+                            src={profileImage}
+                            alt="โปรไฟล์"
+                            className="w-10 h-10 rounded-full object-cover border-2 border-white"
+                        />
+                        <div className="flex flex-col">
+                            <span className="text-sm font-semibold">
+                                {isLoadingProfile ? "กำลังโหลด..." : profileName}
+                            </span>
+                            <a
+                                href={`/profile/${user.id}`}
+                                className="text-xs text-amber-200 underline hover:text-white transition-colors"
+                            >
+                                ดูโปรไฟล์
+                            </a>
+                        </div>
+                        <a
+                            href={`/profile/${user.id}`}
+                            className="bg-white text-amber-900 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
+                        >
+                            โปรไฟล์
+                        </a>
+                    </div>
+                ) : (
+                    <div className="flex items-center space-x-4">
+                        <a href="/login" className="hover:text-yellow-300 transition-colors text-sm">Sign In</a>
+                        <a
+                            href="/register"
+                            className="bg-white text-amber-900 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
+                        >
+                            Sign Up
+                        </a>
+                    </div>
+                )}
             </nav>
         </header>
     );
@@ -58,16 +145,16 @@ interface Product {
 
 // -- COMPONENT 2: Product Card --
 // (เหมือนเดิมจากโค้ดที่คุณให้มา)
-function ProductCard({ product, onAddToCart }: { product: Product, onAddToCart: () => void }) {
+function ProductCard({ product, onAddToCart }: { product: Product, onAddToCart: (product: Product) => void }) {
     return (
         <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             {/* รูปสินค้า */}
             <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
                 {product.imageUrl ? (
-                    <img 
-                        src={product.imageUrl} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover" 
+                    <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                             // In case the image fails to load, show a placeholder
                             const target = e.target as HTMLImageElement;
@@ -82,16 +169,16 @@ function ProductCard({ product, onAddToCart }: { product: Product, onAddToCart: 
             {/* รายละเอียดสินค้า */}
             <div className="p-4">
                 <h3 className="font-semibold text-lg text-gray-800 mb-2 truncate" title={product.name}>{product.name}</h3>
-                
+
                 {/* 2. สร้าง Flex container สำหรับราคาและปุ่มบวก */}
                 <div className="flex justify-between items-center mt-2">
                     <p className="text-amber-800 font-bold text-lg">
                         {product.price.toLocaleString('th-TH', { style: 'currency', currency: 'THB' })}
                     </p>
-                    
+
                     {/* 3. ปุ่ม "บวก" สำหรับเพิ่มเข้าตะกร้า - เปลี่ยน onClick */}
-                    <button 
-                        onClick={onAddToCart} // <--- เปลี่ยนตรงนี้
+                    <button
+                        onClick={() => onAddToCart(product)}
                         className="bg-amber-800 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-amber-700 transition-colors shadow"
                         aria-label={`เพิ่ม ${product.name} ลงในตะกร้า`}
                         title="เพิ่มลงตะกร้า"
@@ -118,19 +205,19 @@ const mockProducts: Product[] = [
 
 // -- COMPONENT 3: Product Grid (Body) --
 // *** ส่วนนี้คือส่วนที่เราเพิ่ม Logic การค้นหาและจัดเรียง ***
-function ProductGrid({ onAddToCart }: { onAddToCart: () => void }) {
-    
+function ProductGrid({ onAddToCart }: { onAddToCart: (product: Product) => void }) {
+
     // สถานะสำหรับจัดเรียง
     const [sortState, setSortState] = useState(0); // 0: default, 1: name, 2: price
-    
+
     // 3. เพิ่ม State สำหรับเก็บค่าในช่องค้นหา
     const [searchTerm, setSearchTerm] = useState("");
 
     // 4. อัปเดต useMemo ให้กรองข้อมูล (filter) ก่อน แล้วจึงจัดเรียง (sort)
     const filteredAndSortedProducts = useMemo(() => {
-        
+
         // 4.1 กรองตาม searchTerm ก่อน
-        const filteredProducts = mockProducts.filter(product => 
+        const filteredProducts = mockProducts.filter(product =>
             product.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
@@ -138,7 +225,7 @@ function ProductGrid({ onAddToCart }: { onAddToCart: () => void }) {
         if (sortState === 0) {
             return filteredProducts; // คืนค่าที่กรองแล้ว (แต่ยังไม่จัดเรียง)
         }
-        
+
         // สร้าง Array ใหม่จากข้อมูลที่กรองแล้วเพื่อจัดเรียง
         const sorted = [...filteredProducts];
 
@@ -172,20 +259,20 @@ function ProductGrid({ onAddToCart }: { onAddToCart: () => void }) {
     return (
         <main className="container mx-auto px-4 sm:px-6 py-8">
             <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
-                
+
                 {/* 6. ปรับ Layout ส่วนหัว (H2, Search, Sort) */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <h2 className="text-2xl font-bold text-gray-800 flex-shrink-0">สินค้าน่าสนใจ</h2>
-                    
+                    <h2 className="text-2xl font-bold text-gray-800 shrink-0">สินค้าน่าสนใจ</h2>
+
                     {/* 7. เพิ่ม Container สำหรับช่องค้นหาและปุ่มจัดเรียง */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
-                        
+
                         {/* 8. ช่องค้นหา */}
                         <div className="relative w-full sm:w-auto">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                                 <Search size={18} />
                             </span>
-                            <input 
+                            <input
                                 type="text"
                                 placeholder="ค้นหาด้วยชื่อ..."
                                 value={searchTerm}
@@ -195,16 +282,15 @@ function ProductGrid({ onAddToCart }: { onAddToCart: () => void }) {
                         </div>
 
                         {/* 9. ปุ่มจัดเรียง (เหมือนเดิม แต่ปรับ w-full) */}
-                        <button 
+                        <button
                             onClick={toggleSort}
                             title="จัดเรียงสินค้า"
-                            className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-full text-sm transition-colors w-full sm:w-auto ${
-                                sortInfo.active
-                                    ? 'bg-amber-800 text-white shadow-md'
-                                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                            }`}
+                            className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-full text-sm transition-colors w-full sm:w-auto ${sortInfo.active
+                                ? 'bg-amber-800 text-white shadow-md'
+                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                                }`}
                         >
-                            <div className="flex-shrink-0 w-4 h-4">{sortInfo.icon}</div>
+                            <div className="shrink-0 w-4 h-4">{sortInfo.icon}</div>
                             <span>{sortInfo.text}</span>
                         </button>
                     </div>
@@ -215,7 +301,7 @@ function ProductGrid({ onAddToCart }: { onAddToCart: () => void }) {
                 {filteredAndSortedProducts.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {filteredAndSortedProducts.map(product => (
-                            <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} /> // <--- ส่ง prop ไปที่นี่
+                            <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
                         ))}
                     </div>
                 ) : (
@@ -244,7 +330,7 @@ function CartButton({ itemCount }: { itemCount: number }) { // <--- รับ it
             aria-label="เปิดตะกร้าสินค้า"
         >
             <ShoppingCart size={28} />
-            
+
             {/* เพิ่ม Badge แสดงจำนวนสินค้า */}
             {itemCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
@@ -257,12 +343,56 @@ function CartButton({ itemCount }: { itemCount: number }) { // <--- รับ it
 
 // -- MAIN APP COMPONENT --
 export default function AntiqueShopPage() {
-    // 1. เพิ่ม State สำหรับนับจำนวนสินค้าในตะกร้า
     const [cartItemCount, setCartItemCount] = useState(0);
 
-    // 2. สร้างฟังก์ชันสำหรับเพิ่มสินค้า (แค่เพิ่มจำนวนนับ)
-    const handleAddToCart = () => {
-        setCartItemCount(prevCount => prevCount + 1);
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const stored = localStorage.getItem("cart_items");
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored) as { quantity?: number }[];
+                const total = parsed.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
+                setCartItemCount(total);
+            } catch (error) {
+                console.error("Failed to parse cart items:", error);
+            }
+        }
+    }, []);
+
+    const handleAddToCart = (product: Product) => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        const stored = localStorage.getItem("cart_items");
+        let cart: any[] = [];
+        if (stored) {
+            try {
+                cart = JSON.parse(stored);
+            } catch (error) {
+                console.error("Failed to parse cart items:", error);
+            }
+        }
+
+        const existingIndex = cart.findIndex((item) => item.id === product.id);
+
+        if (existingIndex > -1) {
+            cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+        } else {
+            cart.push({
+                id: product.id,
+                name: product.name,
+                description: "",
+                price: product.price,
+                quantity: 1,
+                imageUrl: product.imageUrl,
+            });
+        }
+
+        localStorage.setItem("cart_items", JSON.stringify(cart));
+
+        const total = cart.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
+        setCartItemCount(total);
     };
 
     return (
