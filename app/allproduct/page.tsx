@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 // 1. Import ไอคอน (เพิ่ม Search)
 import {
     Store,
@@ -10,22 +11,25 @@ import {
     ArrowDownAZ,
     ArrowDownWideNarrow,
     Search, // 2. เพิ่มไอคอนค้นหา
-    Plus // 1. เพิ่มไอคอน Plus
+    Plus, // 1. เพิ่มไอคอน Plus
+    LogOut // เพิ่มไอคอน LogOut
 } from 'lucide-react';
 import { supabase } from "@/lib/supabaseclinet";
 import { User } from "@supabase/supabase-js";
 
 interface UserProfile {
-    fristName: string;
+    firstName: string;
     lastName: string;
     user_image_url: string | null;
 }
 
 // -- COMPONENT 1: Header (Navbar) --
 function Header() {
+    const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     useEffect(() => {
         const loadSession = async () => {
@@ -54,15 +58,18 @@ function Header() {
             setIsLoadingProfile(true);
             const { data, error } = await supabase
                 .from("user_tb")
-                .select("fristName,lastName,user_image_url")
+                .select("firstName,lastName,user_image_url")
                 .eq("id", user.id)
-                .single();
+                .maybeSingle(); // ใช้ maybeSingle() แทน single() เพื่อหลีกเลี่ยง error เมื่อไม่มีข้อมูล
 
             if (error) {
-                console.error("Failed to load profile:", error.message);
+                console.error("Failed to load profile:", error);
                 setProfile(null);
-            } else {
+            } else if (data) {
                 setProfile(data as UserProfile);
+            } else {
+                // ไม่มีข้อมูล แต่ไม่ใช่ error
+                setProfile(null);
             }
             setIsLoadingProfile(false);
         };
@@ -71,10 +78,36 @@ function Header() {
     }, [user?.id]);
 
     const profileName = profile
-        ? `${profile.fristName ?? ""} ${profile.lastName ?? ""}`.trim() || "ผู้ใช้งาน"
+        ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || "ผู้ใช้งาน"
         : user?.email;
     const profileImage =
         profile?.user_image_url || "https://placehold.co/64x64/8a4f1a/ffffff?text=U";
+
+    // ฟังก์ชันสำหรับออกจากระบบ
+    const handleLogout = async () => {
+        try {
+            setIsLoggingOut(true);
+            const { error } = await supabase.auth.signOut();
+            
+            if (error) {
+                console.error('Error signing out:', error);
+                alert('เกิดข้อผิดพลาดในการออกจากระบบ');
+            } else {
+                // Clear local storage ถ้ามี
+                if (typeof window !== 'undefined') {
+                    localStorage.removeItem('cart_items');
+                }
+                // Redirect ไปหน้า allproduct (จะแสดงเป็น guest)
+                router.push('/allproduct');
+                router.refresh();
+            }
+        } catch (err: any) {
+            console.error('Error during logout:', err);
+            alert('เกิดข้อผิดพลาดในการออกจากระบบ');
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
 
     return (
         <header className="bg-amber-900 text-white shadow-md sticky top-0 z-10">
@@ -112,12 +145,14 @@ function Header() {
                                 ดูโปรไฟล์
                             </a>
                         </div>
-                        <a
-                            href={`/profile/${user.id}`}
-                            className="bg-white text-amber-900 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
+                        <button
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className="bg-white text-amber-900 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                         >
-                            โปรไฟล์
-                        </a>
+                            <LogOut size={16} />
+                            <span>{isLoggingOut ? 'กำลังออกจากระบบ...' : 'ออกจากระบบ'}</span>
+                        </button>
                     </div>
                 ) : (
                     <div className="flex items-center space-x-4">

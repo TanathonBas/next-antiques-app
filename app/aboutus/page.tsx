@@ -65,7 +65,7 @@ export default function page() {
 
                     {/* ส่วนท้ายชื่อผู้จัดทำ */}
                     <div className="mt-16 text-sm text-black-500">
-                        <p>BY DTI Tanathon</p>
+                        <p>BY DTI Student</p>
                         <p>SAU</p>
                     </div>
 

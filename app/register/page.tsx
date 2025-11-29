@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabaseclinet";
 
 // Interfaces for type safety
 interface FormData {
-    fristName: string;
+    firstName: string;
     lastName: string;
     address: string;
     email: string;
@@ -18,7 +18,7 @@ interface FormData {
 export default function Page() {
     const router = useRouter();
     const [formData, setFormData] = useState<FormData>({
-        fristName: "",
+        firstName: "",
         lastName: "",
         address: "",
         email: "",
@@ -105,7 +105,7 @@ export default function Page() {
                 .from('user_tb')
                 .insert({
                     id: authData.user.id,
-                    fristName: formData.fristName,
+                    firstName: formData.firstName,
                     lastName: formData.lastName,
                     email: formData.email,
                     address: formData.address,
@@ -144,10 +144,10 @@ export default function Page() {
                         </label>
                         <input
                             type="text"
-                            name="fristName"
-                            id="fristName"
+                            name="firstName"
+                            id="firstName"
                             required
-                            value={formData.fristName}
+                            value={formData.firstName}
                             onChange={handleInputChange}
                             className="mt-1 block w-full rounded-full border-gray-500 shadow-sm focus:border-amber-500 focus:ring-amber-500 p-3"
                         />
